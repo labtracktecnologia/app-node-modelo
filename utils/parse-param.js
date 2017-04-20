@@ -15,7 +15,6 @@ const parseAttribute = function (attribute, regex) {
 }
 
 const parseColumns = function (columns, schema) {
-  console.log(columns, schema.obj)
   if (!columns) return []
   let result = []
   let cols = columns.split(',')
