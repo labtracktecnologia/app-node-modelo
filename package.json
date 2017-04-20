@@ -1,0 +1,26 @@
+{
+  "name": "app-node-modelo",
+  "version": "0.0.1",
+  "description": "Modelo para aplicações Node JS + Express + Mongoose e muito mais",
+  "main": "server.js",
+  "scripts": {
+    "start": "node .",
+    "dev": "nodemon .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jhony Pereira <jhonystein@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^1.0.2",
+    "body-parser": "^1.17.1",
+    "consign": "^0.1.4",
+    "cors": "^2.8.3",
+    "express": "^4.15.2",
+    "helmet": "^3.5.0",
+    "mongoose": "^4.9.4",
+    "mongoose-schema-jsonschema": "^1.1.12",
+    "morgan": "^1.8.1",
+    "passport": "^0.3.2",
+    "passport-jwt": "^2.2.1"
+  }
+}
