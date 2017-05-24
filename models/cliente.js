@@ -12,8 +12,12 @@ var model = new Schema({
     required: true
   }, 
   tenant: {
-    user: Schema.Types.ObjectId,
-    group: Schema.Types.ObjectId
+    type: {
+      user: Schema.Types.ObjectId,
+      group: Schema.Types.ObjectId
+    },
+    required: true,
+    select: false
   }
 })
 

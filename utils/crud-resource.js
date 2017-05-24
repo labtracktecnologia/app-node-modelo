@@ -1,17 +1,33 @@
 const mongoose = require('mongoose')
+const passport = require("passport")
 const errorCallback = require('./error-callback')
 const requiredPermission = require('./required-permission')
 const parseParam = require('./parse-param')
+const Router = require('express').Router
 
 module.exports = function (resource, app) {
 
   const permission = typeof resource === 'object' ? resource.permission : undefined
   resource = typeof resource === 'object' ? resource.resource : resource
   const model = mongoose.model(resource)
-  console.info(`Mapeado o serviço/model ${resource}`)
+
+  const resolveQuery = (req, query) => {
+    query = query || parseParam(req.query.query, { regex: true })
+    if (req.params.id) {
+      query['_id'] = req.params.id
+    }
+    if (req.user) {
+      query['$or'] = [
+        { tenant: null },
+        { 'tenant.user': req.user.user },
+        { 'tenant.group': req.user.group }
+      ]
+    }
+    return query
+  }
 
   const findAll = function (req, resp) {
-    let query = parseParam(req.query.query, { regex: true })
+    let query = resolveQuery(req)
     let columns = parseParam(req.query.fields, { schema: model.schema })
     let options = {
       sort: parseParam(req.query.sort),
@@ -28,7 +44,7 @@ module.exports = function (resource, app) {
   }
 
   const findOne = function (req, resp) {
-    model.findById(req.params.id).then(function (data) {
+    model.findOne(resolveQuery(req)).then(function (data) {
       if (!data) {
         return Promise.reject({
           model: resource,
@@ -42,13 +58,20 @@ module.exports = function (resource, app) {
   }
 
   const insert = function (req, resp) {
-    model.create(req.body).then(function (data) {
-      resp.status(201).json(data)
-    }).catch(errorCallback(resp))
+    let bean = req.body
+    bean.tenant = req.user
+    model.create(bean)
+      .then(function (data) {
+        return model.findById(data._id)
+      })
+      .then(function (data) {
+        resp.status(201).json(data)
+      })
+      .catch(errorCallback(resp))
   }
 
   const update = function (req, resp) {
-    model.findById(req.params.id).then(function (data) {
+    model.findOne(resolveQuery(req)).then(function (data) {
       if (!data) {
         return Promise.reject({
           model: resource,
@@ -65,7 +88,7 @@ module.exports = function (resource, app) {
   }
 
   const remove = function (req, resp) {
-    model.remove({ _id: req.params.id }).then(function () {
+    model.remove(resolveQuery(req)).then(function () {
       resp.sendStatus(204)
     }, errorCallback(resp))
   }
@@ -95,25 +118,23 @@ module.exports = function (resource, app) {
     })
   }
 
-  if (!app) {
-    return function (app) {
-      app.route(`/api/${resource}`)
-        .get(requiredPermission(permission), findAll)
-        .post(requiredPermission(permission), insert)
-        .options(sendOptions)
-      app.route(`/api/${resource}/:id`)
-        .get(requiredPermission(permission), findOne)
-        .delete(requiredPermission(permission), remove)
-        .put(requiredPermission(permission), update)
-    }
+  if (app) {
+    routerMapper(app)
   } else {
-    app.route(`/api/${resource}`)
-      .get(requiredPermission(permission), findAll)
-      .post(requiredPermission(permission), insert)
-      .options(sendOptions)
-    app.route(`/api/${resource}/:id`)
-      .get(requiredPermission(permission), findOne)
-      .delete(requiredPermission(permission), remove)
-      .put(requiredPermission(permission), update)
+    return routerMapper
+  }
+
+  function routerMapper(app) {
+    app.options(`/api/${resource}`, sendOptions)
+    app.use(`/api/${resource}`, Router()
+      .use(passport.authenticate("jwt", { session: false }))
+      .use(requiredPermission(permission))
+      .get('/', findAll)
+      .post('/', insert)
+      .get('/:id', findOne)
+      .delete('/:id', remove)
+      .put('/:id', update))
+
+    console.info(`Mapeado o serviço/model ${resource}`)
   }
 }
