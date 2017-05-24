@@ -1,10 +1,9 @@
-module.exports = function (response) {
+module.exports = function (response, status = 500) {
   return function (error) {
-     console.log(error)
     if (error.name === 'ValidationError') {
       response.status(400).json(error)
     } else {
-      response.status(error.model ? 404 : 500).json(error)
+      response.status(error.model ? 404 : status).json(error)
     }
   }
 }

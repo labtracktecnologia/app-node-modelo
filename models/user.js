@@ -14,7 +14,10 @@ var model = new Schema({
     select: false
   },
   permissions: [String],
-  tenancy: String
+  group: {
+    type: Schema.Types.ObjectId,
+    ref: 'usersgroups'
+  }
 })
 
 model.pre('save', updatePassword)

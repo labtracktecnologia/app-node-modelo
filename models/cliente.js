@@ -10,6 +10,10 @@ var model = new Schema({
   nome: {
     type: String,
     required: true
+  }, 
+  tenant: {
+    user: Schema.Types.ObjectId,
+    group: Schema.Types.ObjectId
   }
 })
 

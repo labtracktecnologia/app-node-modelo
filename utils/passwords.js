@@ -1,5 +1,5 @@
-var bcrypt = require('bcrypt')
-var SALT_WORK_FACTOR = 10
+const bcrypt = require('bcrypt')
+const SALT_WORK_FACTOR = 10
 
 module.exports.compare = function (candidatePassword, password, cb) {
   bcrypt.compare(candidatePassword, password, function (err, isMatch) {

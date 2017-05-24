@@ -1,15 +1,19 @@
-var mongoose = require('mongoose')
-var errorCallback = require('./error-callback')
-var parseParam = require('./parse-param')
+const mongoose = require('mongoose')
+const errorCallback = require('./error-callback')
+const requiredPermission = require('./required-permission')
+const parseParam = require('./parse-param')
 
-module.exports = function (collection, app) {
+module.exports = function (resource, app) {
 
-  var model = mongoose.model(collection)
+  const permission = typeof resource === 'object' ? resource.permission : undefined
+  resource = typeof resource === 'object' ? resource.resource : resource
+  const model = mongoose.model(resource)
+  console.info(`Mapeado o serviço/model ${resource}`)
 
-  var findAll = function (req, resp) {
-    var query = parseParam(req.query.query, { regex: true })
-    var columns = parseParam(req.query.fields, { schema: model.schema })
-    var options = {
+  const findAll = function (req, resp) {
+    let query = parseParam(req.query.query, { regex: true })
+    let columns = parseParam(req.query.fields, { schema: model.schema })
+    let options = {
       sort: parseParam(req.query.sort),
       limit: req.query.limit ? new Number(req.query.limit) : 25,
       skip: req.query.offset ? new Number(req.query.offset) : 0
@@ -23,11 +27,11 @@ module.exports = function (collection, app) {
     }).catch(errorCallback(resp))
   }
 
-  var findOne = function (req, resp) {
+  const findOne = function (req, resp) {
     model.findById(req.params.id).then(function (data) {
       if (!data) {
         return Promise.reject({
-          model: collection,
+          model: resource,
           id: req.params.id,
           error: "Registro não encontrado"
         })
@@ -37,17 +41,17 @@ module.exports = function (collection, app) {
     }).catch(errorCallback(resp))
   }
 
-  var insert = function (req, resp) {
+  const insert = function (req, resp) {
     model.create(req.body).then(function (data) {
       resp.status(201).json(data)
     }).catch(errorCallback(resp))
   }
 
-  var update = function (req, resp) {
+  const update = function (req, resp) {
     model.findById(req.params.id).then(function (data) {
       if (!data) {
         return Promise.reject({
-          model: collection,
+          model: resource,
           id: req.params.id,
           error: "Registro não encontrado"
         })
@@ -60,32 +64,32 @@ module.exports = function (collection, app) {
     }).catch(errorCallback(resp))
   }
 
-  var remove = function (req, resp) {
+  const remove = function (req, resp) {
     model.remove({ _id: req.params.id }).then(function () {
       resp.sendStatus(204)
     }, errorCallback(resp))
   }
 
-  var sendOptions = function (req, resp) {
+  const sendOptions = function (req, resp) {
     resp.set({
       'Content-Type': 'application/schema+json'
     }).json({
       model: model.jsonSchema(),
       methods: {
         GET: [{
-          url: `/api/${collection}`,
+          url: `/api/${resource}`,
           params: ['query', 'fields', 'sort', 'limit', 'offset']
         }, {
-          url: `/api/${collection}/:id`
+          url: `/api/${resource}/:id`
         }],
         POST: {
-          url: `/api/${collection}`
+          url: `/api/${resource}`
         },
         PUT: {
-          url: `/api/${collection}/:id`
+          url: `/api/${resource}/:id`
         },
         DELETE: {
-          url: `/api/${collection}/:id`
+          url: `/api/${resource}/:id`
         }
       }
     })
@@ -93,23 +97,23 @@ module.exports = function (collection, app) {
 
   if (!app) {
     return function (app) {
-      app.route(`/api/${collection}`)
-        .get(findAll)
-        .post(insert)
+      app.route(`/api/${resource}`)
+        .get(requiredPermission(permission), findAll)
+        .post(requiredPermission(permission), insert)
         .options(sendOptions)
-      app.route(`/api/${collection}/:id`)
-        .get(findOne)
-        .delete(remove)
-        .put(update)
+      app.route(`/api/${resource}/:id`)
+        .get(requiredPermission(permission), findOne)
+        .delete(requiredPermission(permission), remove)
+        .put(requiredPermission(permission), update)
     }
   } else {
-    app.route(`/api/${collection}`)
-      .get(findAll)
-      .post(insert)
+    app.route(`/api/${resource}`)
+      .get(requiredPermission(permission), findAll)
+      .post(requiredPermission(permission), insert)
       .options(sendOptions)
-    app.route(`/api/${collection}/:id`)
-      .get(findOne)
-      .delete(remove)
-      .put(update)
+    app.route(`/api/${resource}/:id`)
+      .get(requiredPermission(permission), findOne)
+      .delete(requiredPermission(permission), remove)
+      .put(requiredPermission(permission), update)
   }
 }
