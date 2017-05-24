@@ -10,6 +10,7 @@ function requiredPermission(permission) {
           next()
         }
         console.info(`Requisitando permissão de ${permission}`)
+        console.info('Usuário com as permissões:', getUserPermissions(req.user))
 
         if (getUserPermissions(req.user).indexOf(permission) != -1) {
           next()
@@ -23,7 +24,7 @@ function requiredPermission(permission) {
           next()
         }
         console.info(`Requisitando permissão de ${permission[req.method]} em ${req.method}`)
-        console.info('Usuário com as permissões:', getUserPermissions(req.user), req.user)
+        console.info('Usuário com as permissões:', getUserPermissions(req.user))
 
         if (!permission[req.method]) {
           next()

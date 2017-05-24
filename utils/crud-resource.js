@@ -19,7 +19,7 @@ module.exports = function (resource, app) {
     if (req.user) {
       query['$or'] = [
         { tenant: null },
-        { 'tenant.user': req.user.user },
+        { 'tenant.user': req.user.user['_id'] },
         { 'tenant.group': req.user.group }
       ]
     }
@@ -88,9 +88,18 @@ module.exports = function (resource, app) {
   }
 
   const remove = function (req, resp) {
-    model.remove(resolveQuery(req)).then(function () {
-      resp.sendStatus(204)
-    }, errorCallback(resp))
+    model.remove(resolveQuery(req)).then(function (data) {
+      if (data.result.n) {
+        resp.sendStatus(204)
+      } else {
+        return Promise.reject({
+          model: resource,
+          id: req.params.id,
+          error: "Registro não encontrado"
+        })
+      }
+    })
+    .catch(errorCallback(resp))
   }
 
   const sendOptions = function (req, resp) {
