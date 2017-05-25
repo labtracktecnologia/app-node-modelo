@@ -81,8 +81,8 @@ module.exports = function (app) {
         }
       })
       .then(function (data) {
+        resp.set('X-Token', jwt.sign({ username: data.username }, params.secretOrKey, { expiresIn: params.expiresTime }))
         resp.json({
-          token: jwt.sign({ username: data.username }, params.secretOrKey, { expiresIn: params.expiresTime }),
           data
         })
       })
@@ -90,6 +90,7 @@ module.exports = function (app) {
   })
 
   app.get('/api/auth/@me', function (req, resp) {
+    resp.set('X-Token', jwt.sign({ username: req.user.user.username }, params.secretOrKey, { expiresIn: params.expiresTime }))
     resp.json(req.user.user)
   })
 }
