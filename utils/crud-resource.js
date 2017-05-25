@@ -99,7 +99,7 @@ module.exports = function (resource, app) {
         })
       }
     })
-    .catch(errorCallback(resp))
+      .catch(errorCallback(resp))
   }
 
   const sendOptions = function (req, resp) {
@@ -137,6 +137,11 @@ module.exports = function (resource, app) {
     app.options(`/api/${resource}`, sendOptions)
     app.use(`/api/${resource}`, Router()
       .use(passport.authenticate("jwt", { session: false }))
+      .use(function (req, resp, next) {
+        if (req.user) {
+          resp.set('X-Token', jwt.sign({ username: req.user.user.username }, params.secretOrKey, { expiresIn: params.expiresTime }))
+        }
+      })
       .use(requiredPermission(permission))
       .get('/', findAll)
       .post('/', insert)

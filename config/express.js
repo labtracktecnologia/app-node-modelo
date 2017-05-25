@@ -10,10 +10,13 @@ app.use(express.static('./public'))
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(cors({
-  origin: "*",
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  credentials: true,
+  exposedHeaders: ['Authorization', 'Content-Type', 'X-Token', 'X-Total-Count'],
   methods: "GET,OPTIONS,PUT,POST,DELETE",
-  preflightContinue: true,
-  optionsSuccessStatus: 200
+  origin: true,
+  optionsSuccessStatus: 200,
+  preflightContinue: true
 }))
 app.use(helmet({
   frameguard: {

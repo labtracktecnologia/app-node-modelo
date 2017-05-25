@@ -41,8 +41,13 @@ module.exports = function (app) {
 
   app.use(passport.initialize())
   app.use('/api', passport.authenticate("jwt", { session: false }))
+  app.use('/api', function (req, resp, next) {
+    if (req.user) {
+      resp.set('X-Token', jwt.sign({ username: req.user.user.username }, params.secretOrKey, { expiresIn: params.expiresTime }))
+    }
+  })
 
-  app.post('/join', function (req, resp) {
+  app.post('/register', function (req, resp) {
     userModel.count()
       .then(function (count) {
         if (count === 0) {
@@ -89,8 +94,9 @@ module.exports = function (app) {
       .catch(errorCallback(resp, 401))
   })
 
-  app.get('/api/auth/@me', function (req, resp) {
+  app.get('/auth/@me', passport.authenticate("jwt", { session: false }), function (req, resp) {
     resp.set('X-Token', jwt.sign({ username: req.user.user.username }, params.secretOrKey, { expiresIn: params.expiresTime }))
     resp.json(req.user.user)
   })
+
 }

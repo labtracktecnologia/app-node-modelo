@@ -5,7 +5,7 @@ const os = require('os')
 
 database('mongodb://localhost/sistema')
 
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 3000
 
 http.createServer(app).listen(port, function () {
   let ifaces = os.networkInterfaces()
