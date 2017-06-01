@@ -1,6 +1,6 @@
 {
   "name": "app-node-modelo",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Modelo para aplicações Node JS + Express + Mongoose e muito mais",
   "main": "server.js",
   "scripts": {
@@ -17,6 +17,8 @@
     "cors": "^2.8.3",
     "express": "^4.15.2",
     "helmet": "^3.5.0",
+    "minimist": "^1.2.0",
+    "minimist-options": "^3.0.1",
     "mongoose": "^4.9.4",
     "mongoose-schema-jsonschema": "^1.1.12",
     "morgan": "^1.8.1",
